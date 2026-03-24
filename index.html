@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transaction Details</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        .container {
+            width: 1000px;
+            margin: 30px auto;
+        }
+
+        .main-layout {
+            display: flex;
+            gap: 30px;
+        }
+
+        /* HASIL DI KIRI */
+        .left-panel {
+            width: 60%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding-bottom: 20px;
+        }
+
+        /* FORM DI KANAN */
+        .right-panel {
+            width: 40%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding-bottom: 20px;
+        }
+
+        .header {
+            background: #2e9e44;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .form-group {
+            padding: 10px 20px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #eee;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 10px 20px;
+        }
+
+        .btn {
+            background: #2e9e44;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #248037;
+        }
+
+        .status-success {
+            background: #b7e3c2;
+            padding: 6px 10px;
+            display: inline-block;
+            border-radius: 5px;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="main-layout">
+
+        <!-- LEFT PANEL = HASIL TRANSAKSI -->
+        <div class="left-panel">
+            <div class="header">Hasil Transaksi</div>
+
+            <div class="form-group">
+                <label>Transaction ID</label>
+                <input type="text" id="transactionId" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label><br>
+                <span id="status"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Bank</label>
+                <input type="text" id="bank" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="text" id="amount" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Nama Rekening</label>
+                <input type="text" id="accountName" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Nomor Rekening</label>
+                <input type="text" id="bankNo" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Waktu Transaksi</label>
+                <input type="text" id="dateCreated" readonly>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL = FILTER (YANG MERAH PINDAH KE SINI) -->
+        <div class="right-panel">
+            <div class="header">Transaction Filter</div>
+
+            <div class="form-group">
+                <label>Vendor ID</label>
+                <input type="text" id="vendorIdInput">
+            </div>
+
+            <div class="filter-row">
+                <div>
+                    <label>USER ID</label>
+                    <select id="userId">
+                        <option value="839">839-MVP</option>
+                        <option value="842">842-ELITE</option>
+                        <option value="841">841-X-PAY</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Tanggal Awal</label>
+                    <input type="date" id="dateStart">
+                </div>
+
+                <div>
+                    <label>Tanggal Akhir</label>
+                    <input type="date" id="dateEnd">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button class="btn" onclick="loadData()">Update</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+async function loadData() {
+
+    const vendorId = document.getElementById("vendorIdInput").value;
+    const userId = document.getElementById("userId").value;
+    const dateStart = document.getElementById("dateStart").value;
+    const dateEnd = document.getElementById("dateEnd").value;
+
+    if (!vendorId || !userId || !dateStart || !dateEnd) {
+        alert("Semua field harus diisi!");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/transaksi", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                vendorId: vendorId,
+                user_id: userId,
+                dateStart: dateStart,
+                dateEnd: dateEnd
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "Terjadi kesalahan");
+            return;
+        }
+
+        // ISI DATA
+        document.getElementById("transactionId").value = data.transactionId;
+        document.getElementById("bank").value = data.bank || "-";
+        document.getElementById("amount").value = data.amount;
+        document.getElementById("accountName").value = data.accountName;
+        document.getElementById("bankNo").value = data.bankNo;
+        document.getElementById("dateCreated").value = data.dateCreated;
+
+        // STATUS
+        document.getElementById("status").innerHTML =
+            `<span class="status-success">${data.status}</span>`;
+
+    } catch (error) {
+        console.error(error);
+        alert("Gagal mengambil data");
+    }
+}
+</script>
+
+</body>
+</html>
